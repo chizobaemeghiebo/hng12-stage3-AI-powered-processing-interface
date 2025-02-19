@@ -1,4 +1,5 @@
 import { useState } from "react";
+import submitLogo from "./assets/send.svg";
 
 function App() {
   const [text, setText] = useState("");
@@ -117,51 +118,32 @@ function App() {
         <div className="font-logo text-xl">ZeddGPT</div>
       </nav>
 
-      <div className="my-8 container w-[90%] mx-auto max-w-[1100px] flex flex-col justify-center items-center min-h-[90vh] bg-pink-200">
-        {/* initial form */}
-
-        <form onSubmit={handleSubmit}>
-          <label htmlFor="input"></label>
-          <textarea
-            name="input"
-            id="input"
-            placeholder="How may I help you?"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            className="border border-amber-800 w-full p-4"
-          ></textarea>
-          <button
-            type="submit"
-            className="border-2 border-amber-900 px-12 py-4 rounded mt-6"
-          >
-            Submit
-          </button>
-        </form>
-      </div>
-
-      <div className="flex flex-col w-3/4 max-w-[1200px] mx-auto">
-        {/* display chat feature*/}
+      {/* container */}
+      <div className="my-8 container w-[90%] mx-auto max-w-[700px] flex flex-col justify-center items-center min-h-[90vh]  p-4">
+        {/* chat feature */}
         {humanReadableDetectedLanguage && (
-          <div className="bg-red-50 text-dark">
-            <div className="p-2 bg-blue-100 text-bold rounded-sm text-right">
+          <div className="flex flex-col gap-4 p-4 w-full mb-4">
+            <div className="p-4 bg-blue-100 text-bold rounded-md text-right self-end">
               <p className="text-base">{text}</p>
               {humanReadableDetectedLanguage && (
                 <span className="bg-gray-300 inline py-1 px-2 rounded-full mt-0 text-[10px]">
                   {humanReadableDetectedLanguage}
                 </span>
               )}
+              <div></div>
             </div>
-
-            <div>
+            <div className="flex gap-2">
               {/* Translate */}
               <form onSubmit={handleTranslate}>
-                <label htmlFor="translationOptions">Translate to: </label>
+                <label htmlFor="translationOptions" className="text-sm mr-2">
+                  Translate to:
+                </label>
                 <select
                   name="translationOptions"
                   id="translationOptions"
                   value={translationOption}
                   onChange={(e) => setTranslationOption(e.target.value)}
-                  className="border-2 border-amber-400"
+                  className="border-2 border-amber-900 rounded-full text-xs mr-2"
                 >
                   <option value="en">English</option>
                   <option value="fr">French</option>
@@ -170,31 +152,51 @@ function App() {
                   <option value="tr">Turkish</option>
                   <option value="ru">Russian</option>
                 </select>
-
                 <button
                   type="submit"
-                  className="border-2 border-amber-900 px-8 py-2 rounded-full mt-6"
+                  className="border-2 border-amber-900 px-4 py-1 rounded-full text-xs"
                 >
                   Translate
                 </button>
               </form>
+              {/* TODO: SUMMARIZE */}
+              <div>
+                <form action="">
+                  <button
+                    type="submit"
+                    className="border-2 border-amber-900 px-4 py-1 rounded-full text-xs"
+                  >
+                    Summarize
+                  </button>
+                </form>
+              </div>
             </div>
-            {/* TODO: SUMMARIZE */}
-            <div>
-              <form action="">
-                <button
-                  type="submit"
-                  className="border-2 border-amber-900 px-8 py-2 rounded-full mt-6"
-                >
-                  Summarize
-                </button>
-              </form>
-            </div>
-            <p className="p-2 bg-red-100 text-bold rounded-sm">{translated}</p>
+            {/* response */}
+            {translated && (
+              <div className="p-4 bg-pink-200 text-bold rounded-md text-left self-start">
+                <p className="text-bold rounded-sm">{translated}</p>
+              </div>
+            )}
           </div>
         )}
 
-        {/* form */}
+        {/* initial form */}
+        <div className="w-full rounded-4xl relative flex flex-col justify-center">
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="input"></label>
+            <textarea
+              name="input"
+              id="input"
+              placeholder="How may I help you?"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              className="pl-6 py-2  w-full rounded-4xl outline-0 ring-amber-500 ring-2 focus:ring-amber-600"
+            ></textarea>
+            <button type="submit" className="absolute right-6 top-5">
+              <img src={submitLogo} alt="send message" />
+            </button>
+          </form>
+        </div>
       </div>
     </>
   );
