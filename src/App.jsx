@@ -1,13 +1,22 @@
-import { useState } from "react";
+import { use, useState } from "react";
 import submitLogo from "./assets/send.svg";
 
 function App() {
   const [text, setText] = useState("");
   const [translated, setTranslated] = useState("");
+  const [summary, setSummary] = useState("");
   const [humanReadableDetectedLanguage, setHumanReadableDetectedLanguage] =
     useState("");
   const [originalDetectedLanguage, setOriginalDetectedLanguage] = useState("");
   const [translationOption, setTranslationOption] = useState("en");
+
+  // MESSAGES VARIABLE SO THAT I CAN LOOP THROUGH IT AND DISPLAY CONTENT DYNAMICALLY
+  const [messages, setMessages] = useState([]);
+  // const [messages, setMessages] = useState([
+  //   {
+  //     content: text,
+  //   },
+  // ]);
 
   // Translator
   const translate = async () => {
@@ -31,6 +40,13 @@ function App() {
       });
       if (originalDetectedLanguage !== translationOption) {
         const newTranslated = await translator.translate(text);
+        setMessages((prevMessages) =>
+          prevMessages.map((message, index) =>
+            index === prevMessages.length - 1
+              ? { ...message, translation: newTranslated }
+              : message
+          )
+        );
         setTranslated(newTranslated);
       }
       // TODO: FIX THIS SO THE ERROR IS PROPERLY DISPLAYED
@@ -48,17 +64,50 @@ function App() {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // console.log(text);
-    detect(text);
-  };
+  // Summarizer
+  const handleSummarize = async () => {
+    const options = {
+      // sharedContext: 'This is a scientific article',
+      type: "key-points",
+      format: "plain-text",
+      length: "short",
+    };
 
-  // for translation
-  const handleTranslate = (e) => {
-    e.preventDefault();
-    translate();
-    // console.log(translationOption);
+    const available = (await self.ai.summarizer.capabilities()).available;
+    let summarry;
+    let summarizer;
+    if (available === "no") {
+      // The Summarizer API isn't usable.
+      return;
+    }
+    if (available === "readily") {
+      // The Summarizer API can be used immediately .
+      try {
+        summarizer = await self.ai.summarizer.create(options);
+        summarry = await summarizer.summarize(text);
+        setSummary(await summarizer.summarize(text));
+
+        setMessages((prevMessages) =>
+          prevMessages.map((message, index) =>
+            index === prevMessages.length - 1
+              ? { ...message, summary: summarry }
+              : message
+          )
+        );
+
+        console.log(summarry);
+        console.log(messages);
+      } catch (error) {
+        console.log("The error is: ", error);
+      }
+    } else {
+      // The Summarizer API can be used after the model is downloaded.
+      summarizer = await self.ai.summarizer.create(options);
+      summarizer.addEventListener("downloadprogress", (e) => {
+        console.log(e.loaded, e.total);
+      });
+      await summarizer.ready;
+    }
   };
 
   // get readable language name from symbol
@@ -66,24 +115,23 @@ function App() {
     const displayNames = new Intl.DisplayNames([targetLanguage], {
       type: "language",
     });
-    // console.log(displayNames);
     return displayNames.of(languageTag);
   };
-  // detector
+
+  // Detector
   const detect = async () => {
     const languageDetectorCapabilities =
       await self.ai.languageDetector.capabilities();
     const canDetect = languageDetectorCapabilities.available;
     let detector;
-    // console.log(languageDetectorCapabilities.available);
     if (canDetect === "no") {
       // The language detector isn't usable
-      console.log("no ai");
+      alert("This device does not support ai");
       return;
     }
+
     if (canDetect === "readily") {
       // The language detector can immediately be used.
-      // console.log("detector ready");
       detector = await self.ai.languageDetector.create();
       const someUserText = text;
       const results = await detector.detect(someUserText);
@@ -91,12 +139,16 @@ function App() {
         // Show the full list of potential languages with their likelihood, ranked
         // from most likely to least likely. In practice, one would pick the top
         // language(s) that cross a high enough threshold.
-        if (result.confidence >= 0.5) {
-          setHumanReadableDetectedLanguage(
-            languageTagToHumanReadable(result.detectedLanguage, "en")
-          );
-          setOriginalDetectedLanguage(result.detectedLanguage);
-          console.log(result);
+
+        try {
+          if (result.confidence >= 0.5) {
+            setHumanReadableDetectedLanguage(
+              languageTagToHumanReadable(result.detectedLanguage, "en")
+            );
+            setOriginalDetectedLanguage(result.detectedLanguage);
+          }
+        } catch (error) {
+          console.log("Error: ", error);
         }
       }
     } else {
@@ -112,6 +164,30 @@ function App() {
     }
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Add the user input message to the messages array
+    const newMessage = {
+      content: text,
+      type: "input",
+      translation: "",
+      summary: "",
+    };
+
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    detect(text);
+
+    console.log(messages);
+  };
+
+  // for translation
+  const handleTranslate = (e) => {
+    translate();
+    // console.log(translationOption);
+  };
+
+  // console.log(messages);
+
   return (
     <>
       <nav className="p-4 bg-amber-300 flex flex-col justify-center">
@@ -121,64 +197,65 @@ function App() {
       {/* container */}
       <div className="my-8 container w-[90%] mx-auto max-w-[700px] flex flex-col justify-center items-center min-h-[90vh]  p-4">
         {/* chat feature */}
-        {humanReadableDetectedLanguage && (
-          <div className="flex flex-col gap-4 p-4 w-full mb-4">
+        {messages.map((message, index) => (
+          <div key={index} className="flex flex-col gap-4 p-4 w-full mb-4">
             <div className="p-4 bg-blue-100 text-bold rounded-md text-right self-end">
-              <p className="text-base">{text}</p>
-              {humanReadableDetectedLanguage && (
-                <span className="bg-gray-300 inline py-1 px-2 rounded-full mt-0 text-[10px]">
-                  {humanReadableDetectedLanguage}
-                </span>
-              )}
+              <p className="text-base">{message.content}</p>
+              <span className="bg-gray-300 inline py-1 px-2 rounded-full mt-0 text-[10px]">
+                {humanReadableDetectedLanguage}
+              </span>
               <div></div>
             </div>
             <div className="flex gap-2">
               {/* Translate */}
-              <form onSubmit={handleTranslate}>
-                <label htmlFor="translationOptions" className="text-sm mr-2">
-                  Translate to:
-                </label>
-                <select
-                  name="translationOptions"
-                  id="translationOptions"
-                  value={translationOption}
-                  onChange={(e) => setTranslationOption(e.target.value)}
-                  className="border-2 border-amber-900 rounded-full text-xs mr-2"
-                >
-                  <option value="en">English</option>
-                  <option value="fr">French</option>
-                  <option value="pt">Portuguese</option>
-                  <option value="es">Spanish</option>
-                  <option value="tr">Turkish</option>
-                  <option value="ru">Russian</option>
-                </select>
-                <button
-                  type="submit"
-                  className="border-2 border-amber-900 px-4 py-1 rounded-full text-xs"
-                >
-                  Translate
-                </button>
-              </form>
+              <label htmlFor="translationOptions" className="text-sm mr-2">
+                Translate to:
+              </label>
+              <select
+                name="translationOptions"
+                id="translationOptions"
+                value={translationOption}
+                onChange={(e) => setTranslationOption(e.target.value)}
+                className="border-2 border-amber-900 rounded-full text-xs mr-2"
+              >
+                <option value="en">English</option>
+                <option value="fr">French</option>
+                <option value="pt">Portuguese</option>
+                <option value="es">Spanish</option>
+                <option value="tr">Turkish</option>
+                <option value="ru">Russian</option>
+              </select>
+              <button
+                className="border-2 border-amber-900 px-4 py-1 rounded-full text-xs"
+                onClick={handleTranslate}
+              >
+                Translate
+              </button>
               {/* TODO: SUMMARIZE */}
-              <div>
-                <form action="">
+              {text.length > 150 && (
+                <div>
                   <button
-                    type="submit"
+                    onClick={handleSummarize}
                     className="border-2 border-amber-900 px-4 py-1 rounded-full text-xs"
                   >
                     Summarize
                   </button>
-                </form>
-              </div>
+                </div>
+              )}
             </div>
             {/* response */}
+            {summary && (
+              <div className="p-4 bg-pink-200 text-bold rounded-md text-left self-start">
+                <p className="text-bold rounded-sm">{message.summary}</p>
+              </div>
+            )}
             {translated && (
               <div className="p-4 bg-pink-200 text-bold rounded-md text-left self-start">
-                <p className="text-bold rounded-sm">{translated}</p>
+                <p className="text-bold rounded-sm">{message.translation}</p>
               </div>
             )}
           </div>
-        )}
+        ))}
 
         {/* initial form */}
         <div className="w-full rounded-4xl relative flex flex-col justify-center">
