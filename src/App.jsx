@@ -95,10 +95,18 @@ function App() {
         const newTranslated = await translator.translate(text);
 
         setTranslated(newTranslated);
-        setMessages((prevMessage) => [
-          ...prevMessage,
-          { sender: "system", text: newTranslated },
-        ]);
+        setMessages((prevMessage) => {
+          const lastMessage = prevMessage[prevMessage.length - 1];
+          if (lastMessage && lastMessage.sender === "system") {
+            return prevMessage.map((msg, index) =>
+              index === prevMessage.length - 1
+                ? { ...msg, text: newTranslated }
+                : msg
+            );
+          } else {
+            return [...prevMessage, { sender: "system", text: newTranslated }];
+          }
+        });
       }
     } else {
       translator = await window.ai.translator.create({
@@ -200,9 +208,9 @@ function App() {
                   {humanReadableDetectedLanguage}
                 </span>
                 <div className="flex items-center gap-3">
-                  {message.text && (
-                    <SelectLanguage onSelectLanguage={handleTranslate} />
-                  )}
+                  {/* {message.text && ( */}
+                  <SelectLanguage onSelectLanguage={handleTranslate} />
+                  {/* )} */}
                   {message.text.length > 150 && (
                     <button
                       className="text-xs border-2 border-red-900 rounded-full px-2"
