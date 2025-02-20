@@ -1,7 +1,7 @@
 import { useState } from "react";
+import { ToastContainer, toast } from "react-toastify";
 import translatelogo from "./assets/googletranslate.svg";
 import UserInput from "./components/UserInput";
-// import Output from "./components/Output";
 import SelectLanguage from "./components/SelectLanguage";
 
 function App() {
@@ -15,6 +15,14 @@ function App() {
   // MESSAGES VARIABLE SO THAT I CAN LOOP THROUGH IT AND DISPLAY CONTENT DYNAMICALLY
   const [messages, setMessages] = useState([]);
 
+  // TOASTIFY
+  const alertNone = () => toast.warn("Enable Chrome AI flags to continue");
+  const download = () =>
+    toast.warn("dowloading AI feature. Check the console for progress");
+  const translateError = () =>
+    toast.warn(
+      "Cannot translate to the same language - choose another language"
+    );
   // Detector
   const detectLanguage = async (text) => {
     const languageDetectorCapabilities =
@@ -23,7 +31,7 @@ function App() {
     let detector;
     if (canDetect === "no") {
       // The language detector isn't usable
-      alert("This device does not support ai");
+      alertNone();
       return;
     }
 
@@ -42,11 +50,6 @@ function App() {
             setHumanReadableDetectedLanguage(
               languageTagToHumanReadable(result.detectedLanguage, "en")
             );
-
-            // setMessages((prevMessage) => [
-            //   ...prevMessage,
-            //   { sender: "system", text: result.detectedLanguage },
-            // ]);
           }
         } catch (error) {
           console.log("Error: ", error);
@@ -57,6 +60,7 @@ function App() {
       detector = await self.ai.languageDetector.create({
         monitor(m) {
           m.addEventListener("downloadprogress", (e) => {
+            download();
             console.log(`Downloaded ${e.loaded} of ${e.total} bytes.`);
           });
         },
@@ -74,19 +78,21 @@ function App() {
     let translator;
     if (canTranslate === "no") {
       // The language detector isn't usable
-      console.log("no ai");
+      alertNone();
       return;
     }
     if (canTranslate === "readily") {
       // The language detector is usable
-      // console.log(text);
-      translator = await window.ai.translator.create({
-        sourceLanguage: detectedLanguage,
-        targetLanguage: translationOption,
-        // sourceLanguage: detectedLanguage,
-        // targetLanguage: translationOption,
-      });
+      if (detectedLanguage == translationOption) {
+        translateError();
+        console.log("same");
+      }
+
       if (detectedLanguage !== translationOption) {
+        translator = await window.ai.translator.create({
+          sourceLanguage: detectedLanguage,
+          targetLanguage: translationOption,
+        });
         const newTranslated = await translator.translate(text);
 
         setTranslated(newTranslated);
@@ -95,6 +101,7 @@ function App() {
           { sender: "system", text: newTranslated },
         ]);
       }
+
       // TODO: FIX THIS SO THE ERROR IS PROPERLY DISPLAYED
       // else if (detectedLanguage == translationOption) {
       //   console.log("cannot translate to the same language");
@@ -103,6 +110,7 @@ function App() {
       translator = await window.ai.translator.create({
         monitor(m) {
           m.addEventListener("downloadprogress", (e) => {
+            download();
             console.log(`Downloaded ${e.loaded} of ${e.total} bytes.`);
           });
         },
@@ -123,6 +131,7 @@ function App() {
     let summarizer;
     if (available === "no") {
       // The Summarizer API isn't usable.
+      alertNone();
       return;
     }
     if (available === "readily") {
@@ -143,6 +152,7 @@ function App() {
       // The Summarizer API can be used after the model is downloaded.
       summarizer = await self.ai.summarizer.create(options);
       summarizer.addEventListener("downloadprogress", (e) => {
+        download();
         console.log(e.loaded, e.total);
       });
       await summarizer.ready;
@@ -191,36 +201,51 @@ function App() {
       <div className="my-8 container w-[90%] mx-auto max-w-[700px] flex flex-col justify-center items-center min-h-[90vh]  p-4">
         {messages.map((message, index) => (
           <div key={index} className="my-8 w-full flex flex-col gap-4">
-            {message.sender == "user" ? (
+            {message.text != "" && message.sender == "user" ? (
               <div className="self-end bg-red-100 p-4 rounded shadow text-right">
                 <div>{message.text}</div>
                 <span className="inline text-[10px] font-bold text-gray-800">
                   {humanReadableDetectedLanguage}
                 </span>
-                {message.text && (
-                  <SelectLanguage onSelectLanguage={handleTranslate} />
-                )}
-
-                {message.text.length > 150 && (
-                  <button
-                    className="text-xs border-2 border-red-900 rounded-full px-2"
-                    onClick={handleSummarize}
-                  >
-                    Summarize
-                  </button>
-                )}
+                <div className="flex items-center gap-3">
+                  {message.text && (
+                    <SelectLanguage onSelectLanguage={handleTranslate} />
+                  )}
+                  {message.text.length > 150 && (
+                    <button
+                      className="text-xs border-2 border-red-900 rounded-full px-2"
+                      onClick={handleSummarize}
+                    >
+                      Summarize
+                    </button>
+                  )}
+                </div>
               </div>
             ) : (
-              <>
-                <div className="self-start bg-green-100 p-4 rounded shadow">
-                  <div>{message.text}</div>
-                </div>
-              </>
+              // <>
+              //   {message.text != "" && message.sender == "system" ? (
+              <div className="self-start bg-green-100 p-4 rounded shadow">
+                <div>{message.text}</div>
+              </div>
+              // ) : (
+              //   ""
+              // )}
+              // </>
+            )}
+
+            {message.text != "" && message.sender == "system" && summary ? (
+              <div className="self-start bg-green-100 p-4 rounded shadow">
+                <div>{message.text}</div>
+              </div>
+            ) : (
+              ""
             )}
           </div>
         ))}
 
         <UserInput onUserSubmit={handleSubmit} />
+
+        <ToastContainer position="top-center" />
       </div>
     </>
   );

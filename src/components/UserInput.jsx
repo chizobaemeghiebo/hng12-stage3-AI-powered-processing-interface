@@ -1,28 +1,21 @@
 import { useState } from "react";
+import { ToastContainer, toast } from "react-toastify";
 import submitLogo from "../assets/send.svg";
 
 const UserInput = ({ onUserSubmit }) => {
   const [text, setText] = useState("");
 
+  // TOASTIFY FOR NO INPUT
+  const notify = () => toast.error("Please enter text");
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!text) {
-      alert("Please put in a text");
+      notify();
     }
     onUserSubmit(text);
     setText("");
-
-    // Add the user input message to the messages array
-    // const newMessage = {
-    //   content: text,
-    //   type: "input",
-    //   translation: "",
-    //   summary: "",
-    // };
-
-    // setMessages((prevMessages) => [...prevMessages, newMessage]);
-    // detect(text);
   };
 
   return (
