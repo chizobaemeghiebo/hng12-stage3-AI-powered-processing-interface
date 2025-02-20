@@ -4,8 +4,6 @@ import translatelogo from "./assets/googletranslate.svg";
 import UserInput from "./components/UserInput";
 import SelectLanguage from "./components/SelectLanguage";
 
-console.log(import.meta.env.VITE_SUMMARIZER_API_KEY);
-
 function App() {
   const [outputText, setOutputText] = useState("");
   const [translated, setTranslated] = useState("");
@@ -87,7 +85,6 @@ function App() {
       // The language detector is usable
       if (detectedLanguage == translationOption) {
         translateError();
-        console.log("same");
       }
 
       if (detectedLanguage !== translationOption) {
