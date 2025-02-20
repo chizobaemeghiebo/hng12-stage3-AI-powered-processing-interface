@@ -4,6 +4,8 @@ import translatelogo from "./assets/googletranslate.svg";
 import UserInput from "./components/UserInput";
 import SelectLanguage from "./components/SelectLanguage";
 
+console.log(import.meta.env.VITE_SUMMARIZER_API_KEY);
+
 function App() {
   const [outputText, setOutputText] = useState("");
   const [translated, setTranslated] = useState("");
@@ -101,11 +103,6 @@ function App() {
           { sender: "system", text: newTranslated },
         ]);
       }
-
-      // TODO: FIX THIS SO THE ERROR IS PROPERLY DISPLAYED
-      // else if (detectedLanguage == translationOption) {
-      //   console.log("cannot translate to the same language");
-      // }
     } else {
       translator = await window.ai.translator.create({
         monitor(m) {
@@ -183,8 +180,6 @@ function App() {
 
     detectLanguage(text);
   };
-
-  console.log(messages);
 
   return (
     <>
