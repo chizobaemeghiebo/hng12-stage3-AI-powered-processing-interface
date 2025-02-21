@@ -147,12 +147,7 @@ function App() {
       try {
         summarizer = await self.ai.summarizer.create(options);
         mainSummary = await summarizer.summarize(outputText);
-        setSummary(await summarizer.summarize(outputText));
-
-        // setMessages((prevMessage) => [
-        //   ...prevMessage,
-        //   { sender: "system", text: mainSummary },
-        // ]);
+        setSummary(mainSummary);
 
         setMessages((prevMessage) => {
           const lastMessage = prevMessage[prevMessage.length - 1];
@@ -227,9 +222,7 @@ function App() {
                   {humanReadableDetectedLanguage}
                 </span>
                 <div className="flex items-center gap-3">
-                  {/* {message.text && ( */}
                   <SelectLanguage onSelectLanguage={handleTranslate} />
-                  {/* )} */}
                   {message.text.length > 150 && (
                     <button
                       className="text-xs border-2 border-red-900 rounded-full px-2"
@@ -244,14 +237,6 @@ function App() {
               <div className="self-start bg-green-100 p-4 rounded shadow">
                 <div>{message.text}</div>
               </div>
-            )}
-
-            {message.text != "" && message.sender == "system" && summary ? (
-              <div className="self-start bg-green-100 p-4 rounded shadow">
-                <div>{message.text}</div>
-              </div>
-            ) : (
-              ""
             )}
           </div>
         ))}
