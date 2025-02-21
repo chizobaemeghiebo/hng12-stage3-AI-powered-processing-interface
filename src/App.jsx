@@ -16,12 +16,18 @@ function App() {
   const [messages, setMessages] = useState([]);
 
   // TOASTIFY
-  const alertNone = () => toast.warn("Enable Chrome AI flags to continue");
+  const alertNone = () =>
+    toast.warn("Enable Chrome AI flags to continue", {
+      theme: "dark",
+    });
   const download = () =>
-    toast.warn("dowloading AI feature. Check the console for progress");
+    toast.warn("dowloading AI feature. Check the console for progress", {
+      theme: "dark",
+    });
   const translateError = () =>
     toast.warn(
-      "Cannot translate to the same language - choose another language"
+      "Cannot translate to the same language - choose another language",
+      { theme: "dark" }
     );
   // Detector
   const detectLanguage = async (text) => {
@@ -143,10 +149,23 @@ function App() {
         mainSummary = await summarizer.summarize(outputText);
         setSummary(await summarizer.summarize(outputText));
 
-        setMessages((prevMessage) => [
-          ...prevMessage,
-          { sender: "system", text: mainSummary },
-        ]);
+        // setMessages((prevMessage) => [
+        //   ...prevMessage,
+        //   { sender: "system", text: mainSummary },
+        // ]);
+
+        setMessages((prevMessage) => {
+          const lastMessage = prevMessage[prevMessage.length - 1];
+          if (lastMessage && lastMessage.sender === "system") {
+            return prevMessage.map((msg, index) =>
+              index === prevMessage.length - 1
+                ? { ...msg, text: mainSummary }
+                : msg
+            );
+          } else {
+            return [...prevMessage, { sender: "system", text: mainSummary }];
+          }
+        });
       } catch (error) {
         console.log("The error is: ", error);
       }
@@ -222,15 +241,9 @@ function App() {
                 </div>
               </div>
             ) : (
-              // <>
-              //   {message.text != "" && message.sender == "system" ? (
               <div className="self-start bg-green-100 p-4 rounded shadow">
                 <div>{message.text}</div>
               </div>
-              // ) : (
-              //   ""
-              // )}
-              // </>
             )}
 
             {message.text != "" && message.sender == "system" && summary ? (

@@ -8,7 +8,7 @@ const SelectLanguage = ({ languages, onSelectLanguage }) => {
 
   return (
     <div className="flex gap-3 text-xs items-center">
-      <label htmlFor="translationOption">Translate to: </label>
+      <label htmlFor="translationOptions">Translate to: </label>
       <select
         name="translationOptions"
         id="translationOptions"
