@@ -35,7 +35,7 @@ function App() {
     );
   // Detector
   const detectLanguage = async (text) => {
-    if (!"ai" in self && !("languageDetector" in self.ai)) {
+    if (!("ai" in self) && !("languageDetector" in self.ai)) {
       // The Language Detector API is available.
       alertNoAi();
       return;
@@ -88,7 +88,7 @@ function App() {
 
   // Translator
   const translate = async (text, translationOption) => {
-    if (!"ai" in self && !("translator" in self.ai)) {
+    if (!("ai" in self) && !("translator" in self.ai)) {
       // The Translator API is supported.
       alertNoAi();
       return;
