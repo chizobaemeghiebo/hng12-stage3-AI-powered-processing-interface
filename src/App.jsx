@@ -239,7 +239,7 @@ function App() {
         {messages.map((message, index) => (
           <div key={index} className="my-8 w-full flex flex-col gap-4">
             {message.text != "" && message.sender == "user" ? (
-              <div className="self-end bg-red-100 p-4 rounded shadow text-right">
+              <div className="self-end bg-purple-100 p-4 rounded shadow text-right">
                 <div>{message.text}</div>
                 <span className="inline text-[10px] font-bold text-gray-800">
                   {humanReadableDetectedLanguage}
@@ -248,7 +248,7 @@ function App() {
                   <SelectLanguage onSelectLanguage={handleTranslate} />
                   {message.text.length > 150 && (
                     <button
-                      className="text-xs border-2 border-red-900 rounded-full px-2"
+                      className="text-xs border-2 border-purple-900 rounded-full px-2"
                       onClick={handleSummarize}
                     >
                       Summarize
@@ -257,7 +257,7 @@ function App() {
                 </div>
               </div>
             ) : (
-              <div className="self-start bg-green-100 p-4 rounded shadow">
+              <div className="self-start bg-blue-100 p-4 rounded shadow">
                 <div>{message.text}</div>
               </div>
             )}

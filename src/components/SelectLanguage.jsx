@@ -13,7 +13,7 @@ const SelectLanguage = ({ languages, onSelectLanguage }) => {
         name="translationOptions"
         value={translationOption}
         onChange={(e) => setTranslationOption(e.target.value)}
-        className="border-2 border-red-900 rounded-full text-xs mr-2 px-2"
+        className="border-2 border-gray-800 rounded-full text-xs mr-2 px-2"
       >
         <option value="en">English</option>
         <option value="fr">French</option>
@@ -23,7 +23,7 @@ const SelectLanguage = ({ languages, onSelectLanguage }) => {
         <option value="ru">Russian</option>
       </select>
       <button
-        className="text-xs border-2 border-red-900 rounded-full px-2"
+        className="text-xs border-2 border-gray-800 rounded-full px-2"
         onClick={handleSelect}
       >
         Translate
