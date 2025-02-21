@@ -8,10 +8,9 @@ const SelectLanguage = ({ languages, onSelectLanguage }) => {
 
   return (
     <div className="flex gap-3 text-xs items-center">
-      <label htmlFor="translationOptions">Translate to: </label>
+      <label>Translate to: </label>
       <select
         name="translationOptions"
-        id="translationOptions"
         value={translationOption}
         onChange={(e) => setTranslationOption(e.target.value)}
         className="border-2 border-red-900 rounded-full text-xs mr-2 px-2"
