@@ -142,64 +142,63 @@ function App() {
         });
       }
     } else {
-      alertNoAi;
+      alertNoAi();
     }
   };
 
   // Summarizer
   const handleSummarize = async () => {
-    if (!("ai" in self) && !("summarizer" in self.ai)) {
+    if ("ai" in self && "summarizer" in self.ai) {
       // The Summarizer API is supported.
-      alertNoAi();
-      return;
-    }
+      const options = {
+        type: "key-points",
+        format: "plain-text",
+        length: "short",
+      };
 
-    const options = {
-      type: "key-points",
-      format: "plain-text",
-      length: "short",
-    };
+      const available = (await self.ai.summarizer.capabilities()).available;
+      let mainSummary;
+      let summarizer;
+      if (available === "no") {
+        // The Summarizer API isn't usable.
+        alertNone();
+        return;
+      }
+      if (available === "readily") {
+        summarize();
 
-    const available = (await self.ai.summarizer.capabilities()).available;
-    let mainSummary;
-    let summarizer;
-    if (available === "no") {
-      // The Summarizer API isn't usable.
-      alertNone();
-      return;
-    }
-    if (available === "readily") {
-      summarize();
+        // The Summarizer API can be used immediately .
+        try {
+          summarizer = await self.ai.summarizer.create(options);
+          mainSummary = await summarizer.summarize(outputText);
+          setSummary(mainSummary);
 
-      // The Summarizer API can be used immediately .
-      try {
+          setMessages((prevMessage) => {
+            const lastMessage = prevMessage[prevMessage.length - 1];
+            if (lastMessage && lastMessage.sender === "system") {
+              return prevMessage.map((msg, index) =>
+                index === prevMessage.length - 1
+                  ? { ...msg, text: mainSummary }
+                  : msg
+              );
+            } else {
+              return [...prevMessage, { sender: "system", text: mainSummary }];
+            }
+          });
+        } catch (error) {
+          console.log("The error is: ", error);
+        }
+      } else {
+        // The Summarizer API can be used after the model is downloaded.
         summarizer = await self.ai.summarizer.create(options);
-        mainSummary = await summarizer.summarize(outputText);
-        setSummary(mainSummary);
-
-        setMessages((prevMessage) => {
-          const lastMessage = prevMessage[prevMessage.length - 1];
-          if (lastMessage && lastMessage.sender === "system") {
-            return prevMessage.map((msg, index) =>
-              index === prevMessage.length - 1
-                ? { ...msg, text: mainSummary }
-                : msg
-            );
-          } else {
-            return [...prevMessage, { sender: "system", text: mainSummary }];
-          }
+        summarizer.addEventListener("downloadprogress", (e) => {
+          download();
+          console.log(e.loaded, e.total);
         });
-      } catch (error) {
-        console.log("The error is: ", error);
+        await summarizer.ready;
       }
     } else {
-      // The Summarizer API can be used after the model is downloaded.
-      summarizer = await self.ai.summarizer.create(options);
-      summarizer.addEventListener("downloadprogress", (e) => {
-        download();
-        console.log(e.loaded, e.total);
-      });
-      await summarizer.ready;
+      alertNoAi();
     }
   };
 
