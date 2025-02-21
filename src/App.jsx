@@ -33,6 +33,8 @@ function App() {
       "Cannot translate to the same language - choose another language",
       { theme: "dark" }
     );
+  const summarize = () =>
+    toast("Summarize in progress, please wait...", { theme: "dark" });
   // Detector
   const detectLanguage = async (text) => {
     if (!("ai" in self) && !("languageDetector" in self.ai)) {
@@ -166,6 +168,8 @@ function App() {
       return;
     }
     if (available === "readily") {
+      summarize();
+
       // The Summarizer API can be used immediately .
       try {
         summarizer = await self.ai.summarizer.create(options);
@@ -248,7 +252,7 @@ function App() {
                   <SelectLanguage onSelectLanguage={handleTranslate} />
                   {message.text.length > 150 && (
                     <button
-                      className="text-xs border-2 border-purple-900 rounded-full px-2"
+                      className="text-xs border-2 border-gray-800 rounded-full px-2"
                       onClick={handleSummarize}
                     >
                       Summarize
