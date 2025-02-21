@@ -20,6 +20,10 @@ function App() {
     toast.warn("Enable Chrome AI flags to continue", {
       theme: "dark",
     });
+  const alertNoAi = () =>
+    toast.warn("Your browser does not support Chrome AIs", {
+      theme: "dark",
+    });
   const download = () =>
     toast.warn("dowloading AI feature. Check the console for progress", {
       theme: "dark",
@@ -31,57 +35,65 @@ function App() {
     );
   // Detector
   const detectLanguage = async (text) => {
-    if ("ai" in self && "languageDetector" in self.ai) {
+    if (!"ai" in self && !("languageDetector" in self.ai)) {
       // The Language Detector API is available.
-      const languageDetectorCapabilities =
-        await self.ai.languageDetector.capabilities();
-      const canDetect = languageDetectorCapabilities.available;
-      let detector;
-      if (canDetect === "no") {
-        // The language detector isn't usable
-        alertNone();
-        return;
-      }
+      alertNoAi();
+      return;
+    }
 
-      if (canDetect === "readily") {
-        // The language detector can immediately be used.
-        detector = await self.ai.languageDetector.create();
-        // const someUserText = text;
-        const results = await detector.detect(text);
-        for (const result of results) {
-          // Show the full list of potential languages with their likelihood, ranked
-          // from most likely to least likely. In practice, one would pick the top
-          // language(s) that cross a high enough threshold.
-          try {
-            if (result.confidence >= 0.5) {
-              setDetectedLanguage(result.detectedLanguage);
-              setHumanReadableDetectedLanguage(
-                languageTagToHumanReadable(result.detectedLanguage, "en")
-              );
-            }
-          } catch (error) {
-            console.log("Error: ", error);
+    // The Language Detector API is available.
+    const languageDetectorCapabilities =
+      await self.ai.languageDetector.capabilities();
+    const canDetect = languageDetectorCapabilities.available;
+    let detector;
+    if (canDetect === "no") {
+      // The language detector isn't usable
+      alertNone();
+      return;
+    }
+
+    if (canDetect === "readily") {
+      // The language detector can immediately be used.
+      detector = await self.ai.languageDetector.create();
+      // const someUserText = text;
+      const results = await detector.detect(text);
+      for (const result of results) {
+        // Show the full list of potential languages with their likelihood, ranked
+        // from most likely to least likely. In practice, one would pick the top
+        // language(s) that cross a high enough threshold.
+        try {
+          if (result.confidence >= 0.5) {
+            setDetectedLanguage(result.detectedLanguage);
+            setHumanReadableDetectedLanguage(
+              languageTagToHumanReadable(result.detectedLanguage, "en")
+            );
           }
+        } catch (error) {
+          console.log("Error: ", error);
         }
-      } else {
-        // The language detector can be used after model download.
-        download();
-        detector = await self.ai.languageDetector.create({
-          monitor(m) {
-            m.addEventListener("downloadprogress", (e) => {
-              console.log(`Downloaded ${e.loaded} of ${e.total} bytes.`);
-            });
-          },
-        });
-        await detector.ready;
       }
     } else {
-      alertNone();
+      // The language detector can be used after model download.
+      download();
+      detector = await self.ai.languageDetector.create({
+        monitor(m) {
+          m.addEventListener("downloadprogress", (e) => {
+            console.log(`Downloaded ${e.loaded} of ${e.total} bytes.`);
+          });
+        },
+      });
+      await detector.ready;
     }
   };
 
   // Translator
   const translate = async (text, translationOption) => {
+    if (!"ai" in self && !("translator" in self.ai)) {
+      // The Translator API is supported.
+      alertNoAi();
+      return;
+    }
+
     const languageTranslatorCapabilities =
       await self.ai.translator.capabilities();
     const canTranslate = languageTranslatorCapabilities.available;
@@ -133,6 +145,12 @@ function App() {
 
   // Summarizer
   const handleSummarize = async () => {
+    if (!("ai" in self) && !("summarizer" in self.ai)) {
+      // The Summarizer API is supported.
+      alertNoAi();
+      return;
+    }
+
     const options = {
       type: "key-points",
       format: "plain-text",

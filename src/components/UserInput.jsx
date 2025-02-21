@@ -16,9 +16,10 @@ const UserInput = ({ onUserSubmit }) => {
 
     if (!text) {
       notify();
+    } else {
+      onUserSubmit(text);
+      setText("");
     }
-    onUserSubmit(text);
-    setText("");
   };
 
   return (
