@@ -20,8 +20,8 @@ function App() {
     toast.warn("Enable Chrome AI flags to continue", {
       theme: "dark",
     });
-  const alertNoAi = () =>
-    toast.warn("Your browser does not support Chrome AIs", {
+  const alertNoAi = (api) =>
+    toast.warn(`Your browser does not support Chrome ${api} AI`, {
       theme: "dark",
     });
   const download = () =>
@@ -142,7 +142,7 @@ function App() {
         });
       }
     } else {
-      alertNoAi();
+      alertNoAi("Translator");
     }
   };
 
@@ -198,7 +198,7 @@ function App() {
         await summarizer.ready;
       }
     } else {
-      alertNoAi();
+      alertNoAi("Summarize");
     }
   };
 
