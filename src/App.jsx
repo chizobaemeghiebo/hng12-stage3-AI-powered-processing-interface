@@ -89,58 +89,60 @@ function App() {
 
   // Translator
   const translate = async (text, translationOption) => {
-    if (!("ai" in self) && !("translator" in self.ai)) {
+    if ("ai" in self && "translator" in self.ai) {
       // The Translator API is supported.
-      alertNoAi();
-      return;
-    }
-
-    const languageTranslatorCapabilities =
-      await self.ai.translator.capabilities();
-    const canTranslate = languageTranslatorCapabilities.available;
-    // change naimg convention
-    let translator;
-    if (canTranslate === "no") {
-      // The language detector isn't usable
-      alertNone();
-      return;
-    }
-    if (canTranslate === "readily") {
-      // The language detector is usable
-      if (detectedLanguage == translationOption) {
-        translateError();
+      const languageTranslatorCapabilities =
+        await self.ai.translator.capabilities();
+      const canTranslate = languageTranslatorCapabilities.available;
+      // change naimg convention
+      let translator;
+      if (canTranslate === "no") {
+        // The language detector isn't usable
+        alertNone();
+        return;
       }
+      if (canTranslate === "readily") {
+        // The language detector is usable
+        if (detectedLanguage == translationOption) {
+          translateError();
+        }
 
-      if (detectedLanguage !== translationOption) {
+        if (detectedLanguage !== translationOption) {
+          translator = await window.ai.translator.create({
+            sourceLanguage: detectedLanguage,
+            targetLanguage: translationOption,
+          });
+          const newTranslated = await translator.translate(text);
+
+          setTranslated(newTranslated);
+          setMessages((prevMessage) => {
+            const lastMessage = prevMessage[prevMessage.length - 1];
+            if (lastMessage && lastMessage.sender === "system") {
+              return prevMessage.map((msg, index) =>
+                index === prevMessage.length - 1
+                  ? { ...msg, text: newTranslated }
+                  : msg
+              );
+            } else {
+              return [
+                ...prevMessage,
+                { sender: "system", text: newTranslated },
+              ];
+            }
+          });
+        }
+      } else {
+        download();
         translator = await window.ai.translator.create({
-          sourceLanguage: detectedLanguage,
-          targetLanguage: translationOption,
-        });
-        const newTranslated = await translator.translate(text);
-
-        setTranslated(newTranslated);
-        setMessages((prevMessage) => {
-          const lastMessage = prevMessage[prevMessage.length - 1];
-          if (lastMessage && lastMessage.sender === "system") {
-            return prevMessage.map((msg, index) =>
-              index === prevMessage.length - 1
-                ? { ...msg, text: newTranslated }
-                : msg
-            );
-          } else {
-            return [...prevMessage, { sender: "system", text: newTranslated }];
-          }
+          monitor(m) {
+            m.addEventListener("downloadprogress", (e) => {
+              console.log(`Downloaded ${e.loaded} of ${e.total} bytes.`);
+            });
+          },
         });
       }
     } else {
-      download();
-      translator = await window.ai.translator.create({
-        monitor(m) {
-          m.addEventListener("downloadprogress", (e) => {
-            console.log(`Downloaded ${e.loaded} of ${e.total} bytes.`);
-          });
-        },
-      });
+      alertNoAi;
     }
   };
 
